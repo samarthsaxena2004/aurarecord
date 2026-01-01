@@ -1,0 +1,27 @@
+{
+  "name": "aurarecord",
+  "version": "1.0.0",
+  "description": "High-end software demo recorder",
+  "main": "./out/main/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview"
+  },
+  "devDependencies": {
+    "electron": "^39.2.7",
+    "electron-vite": "^5.0.0",
+    "vite": "^7.3.0",
+    "@vitejs/plugin-react": "^5.1.2",
+    "typescript": "^5.9.0",
+    "@electron-toolkit/tsconfig": "^2.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "@electron-toolkit/utils": "^4.0.0"
+  }
+}
