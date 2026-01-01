@@ -7,20 +7,22 @@
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
-    "preview": "electron-vite preview"
+    "preview": "electron-vite preview",
+    "native:build": "RUSTFLAGS=\"-C link-arg=-undefined -C link-arg=dynamic_lookup\" napi build --platform --release --manifest-path src-native/Cargo.toml --output-dir . --dts index.d.ts --js index.js"
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^2.0.0",
+    "@napi-rs/cli": "^2.18.4",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react": "^5.1.2",
+    "@vitejs/plugin-react": "^4.3.4",
     "electron": "^39.2.7",
-    "electron-vite": "^5.0.0",
+    "electron-vite": "^2.3.0",
     "typescript": "^5.9.0",
     "vite": "^7.3.0"
   },
   "dependencies": {
-    "@electron-toolkit/preload": "^3.0.2",
+    "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
     "react": "^19.2.1",
     "react-dom": "^19.2.1"
