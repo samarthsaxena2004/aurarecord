@@ -9,39 +9,32 @@ const require = createRequire(import.meta.url)
 const __filename = fileURLToPath(import.meta.url)
 const __dirname_built = dirname(__filename)
 
-// 1. Precise path to project root
+// Resolve project root (Two levels up from out/main/)
 const projectRoot = resolve(__dirname_built, '../..')
-const nativeBridgePath = join(projectRoot, 'index.js')
-
-// 2. DEBUG: Log what's in the root to find the bridge
-console.log('--- SYSTEM CHECK ---')
-console.log('Project Root:', projectRoot)
-if (fs.existsSync(projectRoot)) {
-  console.log('Files in Root:', fs.readdirSync(projectRoot).filter(f => f.includes('index') || f.includes('.node')))
-}
 
 let native: any
 try {
+  // Attempt 1: Standard index.js wrapper
+  const nativeBridgePath = join(projectRoot, 'index.js')
   native = require(nativeBridgePath)
 } catch (e) {
-  console.error('Failed to load bridge via index.js, searching for fallback...')
-  // Fallback: Try to find any .node file if index.js fails
+  // Attempt 2: Fallback to direct .node loading
   const files = fs.readdirSync(projectRoot)
   const nodeFile = files.find(f => f.endsWith('.node'))
   if (nodeFile) {
     native = require(join(projectRoot, nodeFile))
   } else {
-    throw new Error('Native binary (.node) not found in root!')
+    throw new Error('CRITICAL: Native binary (.node) not found in root directory.')
   }
 }
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 1280,
+    height: 720,
     show: false,
     autoHideMenuBar: true,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#0a0a0a', // Matches AuraRecord aesthetic
     webPreferences: {
       preload: join(__dirname_built, '../preload/index.mjs'),
       sandbox: false,
@@ -51,20 +44,13 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
-    console.log('------------------------------------')
-    console.log('AURARECORD NATIVE BRIDGE TEST')
+    console.log('--- NATIVE BRIDGE TEST ---')
     try {
-      // Some NAPI-RS templates export directly, others wrap in an object
-      const status = typeof native.checkRustBridge === 'function' 
-        ? native.checkRustBridge() 
-        : 'Bridge loaded, but function checkRustBridge missing'
-      console.log('RUST RESPONSE:', status)
+      console.log('RUST:', native.checkRustBridge())
       console.log('STATUS: SUCCESS ✅')
     } catch (err) {
-      console.error('STATUS: FAILED ❌')
-      console.error('ERROR:', err)
+      console.error('STATUS: FAILED ❌', err)
     }
-    console.log('------------------------------------')
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {

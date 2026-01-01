@@ -7,8 +7,8 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin()],
     build: {
       rollupOptions: {
-        // Treat our generated bridge as external so Vite doesn't try to bundle it
-        external: ['../../index.js']
+        // This regex catches the native bridge regardless of the exact filename
+        external: [/index\.js$/, /\.node$/] 
       }
     }
   },
@@ -22,6 +22,6 @@ export default defineConfig({
       }
     },
     plugins: [react()],
-    root: 'src/renderer'
+    root: resolve(__dirname, 'src/renderer'), // Explicitly set root
   }
 })
