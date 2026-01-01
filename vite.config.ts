@@ -4,7 +4,13 @@ import { resolve } from 'path'
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin()],
+    build: {
+      rollupOptions: {
+        // Treat our generated bridge as external so Vite doesn't try to bundle it
+        external: ['../../index.js']
+      }
+    }
   },
   preload: {
     plugins: [externalizeDepsPlugin()]
