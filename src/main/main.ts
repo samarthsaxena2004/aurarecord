@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, screen } from 'electron'
 import { join, dirname, resolve } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { createRequire } from 'module'
@@ -8,33 +8,38 @@ import fs from 'fs'
 const require = createRequire(import.meta.url)
 const __filename = fileURLToPath(import.meta.url)
 const __dirname_built = dirname(__filename)
-
-// Resolve project root (Two levels up from out/main/)
 const projectRoot = resolve(__dirname_built, '../..')
 
 let native: any
 try {
-  // Attempt 1: Standard index.js wrapper
-  const nativeBridgePath = join(projectRoot, 'index.js')
-  native = require(nativeBridgePath)
-} catch (e) {
-  // Attempt 2: Fallback to direct .node loading
   const files = fs.readdirSync(projectRoot)
   const nodeFile = files.find(f => f.endsWith('.node'))
   if (nodeFile) {
     native = require(join(projectRoot, nodeFile))
   } else {
-    throw new Error('CRITICAL: Native binary (.node) not found in root directory.')
+    throw new Error('Native binary (.node) not found in root!')
   }
+} catch (e) {
+  console.error('Failed to load native bridge:', e)
 }
 
 function createWindow(): void {
+  // Get primary display size for a true full-screen overlay
+  const primaryDisplay = screen.getPrimaryDisplay()
+  const { width, height } = primaryDisplay.bounds
+
   const mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 720,
-    show: false,
-    autoHideMenuBar: true,
-    backgroundColor: '#0a0a0a', // Matches AuraRecord aesthetic
+    width,
+    height,
+    x: 0,
+    y: 0,
+    transparent: true,
+    frame: false,
+    hasShadow: false,
+    alwaysOnTop: true,
+    resizable: false,
+    movable: false,
+    enableLargerThanScreen: true,
     webPreferences: {
       preload: join(__dirname_built, '../preload/index.mjs'),
       sandbox: false,
@@ -42,14 +47,26 @@ function createWindow(): void {
     }
   })
 
+  // Allows clicking through the window to interact with apps beneath
+  mainWindow.setIgnoreMouseEvents(true)
+
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
-    console.log('--- NATIVE BRIDGE TEST ---')
+    
+    console.log('--- PHASE 2: GHOST AURA ACTIVE ---')
+    
     try {
-      console.log('RUST:', native.checkRustBridge())
-      console.log('STATUS: SUCCESS ✅')
+      if (native.startMouseHook) {
+        native.startMouseHook()
+        
+        setInterval(() => {
+          const state = native.getMouseState()
+          // Pipe to React
+          mainWindow.webContents.send('mouse-pulse', state)
+        }, 16) // ~60 FPS
+      }
     } catch (err) {
-      console.error('STATUS: FAILED ❌', err)
+      console.error('STATUS: PULSE FAILED ❌', err)
     }
   })
 
@@ -62,9 +79,6 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.aurarecord')
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
   createWindow()
 })
 

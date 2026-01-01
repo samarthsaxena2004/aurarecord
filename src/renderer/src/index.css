@@ -1,0 +1,10 @@
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0) !important; /* Total transparency */
+  overflow: hidden;
+  user-select: none;
+  pointer-events: none; /* Secondary safety for click-through */
+}

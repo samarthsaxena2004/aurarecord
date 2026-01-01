@@ -5,10 +5,10 @@ use rdev::{listen, EventType};
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::thread;
 
-// Global Atomics: Shared memory between Rust hook and Electron
+// Atomic storage for lock-free high-frequency updates
 static MOUSE_X: AtomicI32 = AtomicI32::new(0);
 static MOUSE_Y: AtomicI32 = AtomicI32::new(0);
-static LAST_CLICK: AtomicI32 = AtomicI32::new(0); 
+static LAST_CLICK: AtomicI32 = AtomicI32::new(0); // 0: None, 1: Left, 2: Right
 
 #[napi]
 pub fn check_rust_bridge() -> String {
@@ -18,7 +18,7 @@ pub fn check_rust_bridge() -> String {
 #[napi]
 pub fn start_mouse_hook() {
     thread::spawn(|| {
-        // listen() is a blocking call, so it must be in its own thread
+        // listen blocks the thread, so it stays alive here
         if let Err(error) = listen(move |event| {
             match event.event_type {
                 EventType::MouseMove { x, y } => {
@@ -35,14 +35,14 @@ pub fn start_mouse_hook() {
                 _ => {}
             }
         }) {
-            eprintln!("Error starting mouse hook: {:?}", error);
+            eprintln!("Error starting hook: {:?}", error);
         }
     });
 }
 
 #[napi]
 pub fn get_mouse_state() -> serde_json::Value {
-    // We swap the click state back to 0 so we only report a click once
+    // We swap click to 0 so we only report a specific click once
     let click = LAST_CLICK.swap(0, Ordering::Relaxed);
     
     serde_json::json!({

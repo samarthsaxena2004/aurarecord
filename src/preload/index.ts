@@ -1,8 +1,12 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
-// Custom APIs for the renderer will be added here later
-const api = {}
+const api = {
+  // Expose a method to allow the renderer to listen for mouse updates
+  onMousePulse: (callback: (data: any) => void) => {
+    ipcRenderer.on('mouse-pulse', (_event, data) => callback(data))
+  }
+}
 
 if (process.contextIsolated) {
   try {
@@ -12,7 +16,7 @@ if (process.contextIsolated) {
     console.error(error)
   }
 } else {
-  // @ts-ignore (fallback for non-isolated)
+  // @ts-ignore
   window.electron = electronAPI
   // @ts-ignore
   window.api = api

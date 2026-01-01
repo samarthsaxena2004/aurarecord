@@ -2,8 +2,10 @@
   "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
   "include": [
     "src/main/**/*",
-    "src/preload/**/*",
-    "src-native/index.d.ts"
+    "src/preload/**/*"
+  ],
+  "exclude": [
+    "src/renderer/**/*"
   ],
   "compilerOptions": {
     "composite": true,
